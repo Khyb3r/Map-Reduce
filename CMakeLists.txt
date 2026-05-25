@@ -4,4 +4,5 @@ project(map_reduce_C C)
 set(CMAKE_C_STANDARD 11)
 
 add_executable(map_reduce_C src/main.c
-        src/mapreduce.h)
+        src/mapreduce.h
+        src/mapreduce.c)
