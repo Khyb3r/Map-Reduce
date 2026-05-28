@@ -5,4 +5,8 @@ set(CMAKE_C_STANDARD 11)
 
 add_executable(map_reduce_C src/main.c
         src/mapreduce.h
-        src/mapreduce.c)
+        src/mapreduce.c
+        src/utils/vector.h
+        src/utils/vector.c
+        src/utils/queue.h
+        src/utils/queue.c)
