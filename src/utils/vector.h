@@ -18,7 +18,7 @@ void vector_push_back(vector_t*, void*);
 
 void vector_pop_back(vector_t*);
 
-void vector_pop_front(vector_t*);
+int vector_pop_front(vector_t*, void*);
 
 void* vector_top(vector_t* v);
 

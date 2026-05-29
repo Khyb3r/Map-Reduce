@@ -47,8 +47,8 @@ void vector_pop_back(vector_t* v) {
     v->size -= 1;
 }
 
-void vector_pop_front(vector_t* v, void* out) {
-    if (v->size == 0) return;
+int vector_pop_front(vector_t* v, void* out) {
+    if (v->size == 0) return 1;
     // Get first element
     memcpy(out, v->data, v->element_size);
     // Shift everything left
@@ -56,4 +56,5 @@ void vector_pop_front(vector_t* v, void* out) {
         memmove(v->data, (char*) v->data + v->element_size, (v->size - 1) * v->element_size);
     }
     v->size--;
+    return 0;
 }

@@ -13,7 +13,9 @@ typedef struct {
 } file_queue_t;
 
 file_queue_t* file_queue_init(size_t, size_t);
+
 inline void file_queue_destroy(file_queue_t*);
 
+char* pop_from_queue(file_queue_t*);
 
 #endif //QUEUE_H

@@ -1,4 +1,5 @@
 #include "queue.h"
+#include "vector.h"
 
 file_queue_t* file_queue_init(size_t element_size, size_t number_of_files) {
     file_queue_t* file_queue = (file_queue_t* ) malloc(sizeof(file_queue_t));
@@ -13,5 +14,18 @@ inline void file_queue_destroy(file_queue_t* fq) {
     pthread_mutex_destroy(&fq->lock);
     free(fq->queue);
     free(fq);
+}
+
+char* pop_from_queue(file_queue_t* fq) {
+    pthread_mutex_lock(&fq->lock);
+
+    char* file_name;
+    if (vector_pop_front(fq->queue, (void*) &file_name) != 0) {
+        pthread_mutex_unlock(&fq->lock);
+        return NULL;
+    }
+
+    pthread_mutex_unlock(&fq->lock);
+    return file_name;
 }
 
