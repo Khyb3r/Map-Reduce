@@ -1,6 +1,6 @@
 #include "mapreduce.h"
 #include <pthread.h>
-#include <stdlib.h>
+#include <string.h>
 #include "utils/queue.h"
 
 typedef struct {
@@ -33,11 +33,19 @@ typedef struct {
     pthread_mutex_t lock;
 } partition_t;
 
+// Declare as static global so MR_Emit can also access it without changing its function signature
+static vector_t* partitions;
+Partitioner partition_global_func;
+int num_reducers_global;
+
 void MR_Run(int argc, char *argv[], Mapper map, int num_mappers, Reducer reduce, int num_reducers, Partitioner partition) {
+    partition_global_func = partition;
+    num_reducers_global = num_reducers;
+
     // Create mapper threads that will process each file
     pthread_t mapper_threads[num_mappers];
     args_t thread_args[num_mappers];
-    file_queue_t file_queue* = file_queue_init(sizeof(char*) , argc-1);
+    file_queue_t* file_queue = file_queue_init(sizeof(char*) , argc-1);
 
     // Populate file queue with all cli file names passed in
     for (int i = 1; i < file_queue->no_of_files; i++) {
@@ -53,9 +61,9 @@ void MR_Run(int argc, char *argv[], Mapper map, int num_mappers, Reducer reduce,
 
     /* Intermediate data structure
      Partitions -> List of K,V
-     Locks across all of the partitions */
+     Locks across every single partitions */
     const unsigned int NUMBER_OF_PARTITIONS = num_reducers;
-    vector_t* partitions = vector_init(sizeof(partition_t*));
+    partitions = vector_init(sizeof(partition_t*));
 
     for (int i = 0; i < NUMBER_OF_PARTITIONS; i++) {
         partition_t* this_partition = malloc(sizeof(partition_t));
@@ -79,4 +87,22 @@ unsigned long MR_DefaultHashPartition(char *key, int num_partitions) {
 }
 
 void MR_Emit(char *key, char *value) {
+    // Get the specific partition this K,V should go into
+    unsigned long partition_number =  partition_global_func(key, num_reducers_global);
+    // Create copies of K,V
+    char* key_copy = malloc(sizeof(char) * strlen(key) + 1);
+    char* value_copy = malloc(sizeof(char) * strlen(value) + 1);
+    strcpy(key_copy, key);
+    strcpy(value_copy, value);
+    // Create K,V struct and add into the specific partition
+    key_value_t kv_pair = {
+        .key = key_copy,
+        .value = value_copy
+    };
+
+    // Update the partition
+    partition_t* p = ((partition_t**)partitions->data)[partition_number];
+    pthread_mutex_lock(&p->lock);
+    vector_push_back(partitions[partition_number].data, &kv_pair);
+    pthread_mutex_unlock(&p->lock);
 }
